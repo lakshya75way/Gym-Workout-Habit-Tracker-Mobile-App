@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Assessment_4_native",
+    "name": "Forge",
     "slug": "Assessment_4_native",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Assessment-4-native"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +22,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.Assessment4native"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": ["expo-sqlite", "@react-native-community/datetimepicker"]
   }
 }
