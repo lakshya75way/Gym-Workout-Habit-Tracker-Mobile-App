@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { LineChart, BarChart } from "react-native-chart-kit";
-import { THEME } from "@/theme/theme";
+import { THEME, Theme } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import {
   AnalyticsRepository,
@@ -24,18 +25,8 @@ import { Logger } from "@/utils/logger";
 
 const screenWidth = Dimensions.get("window").width;
 
-const chartConfig = {
-  backgroundGradientFrom: THEME.colors.surface,
-  backgroundGradientTo: THEME.colors.surface,
-  color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(161, 161, 170, ${opacity})`,
-  strokeWidth: 2,
-  barPercentage: 0.6,
-  useShadowColorFromDataset: false,
-  decimalPlaces: 0,
-};
-
 export const AnalyticsScreen = () => {
+  const { theme, themeType } = useTheme();
   const user = useAuthStore((state) => state.user);
   const [volumeData, setVolumeData] = React.useState<ChartDataPoint[]>([]);
   const [workoutData, setWorkoutData] = React.useState<ChartDataPoint[]>([]);
@@ -136,22 +127,53 @@ export const AnalyticsScreen = () => {
     ],
   };
 
+  const chartConfig = {
+    backgroundGradientFrom: theme.colors.surface,
+    backgroundGradientTo: theme.colors.surface,
+    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
+    labelColor: (opacity = 1) =>
+      themeType === "dark"
+        ? `rgba(161, 161, 170, ${opacity})`
+        : `rgba(100, 116, 139, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.6,
+    useShadowColorFromDataset: false,
+    decimalPlaces: 0,
+    propsForBackgroundLines: {
+      stroke: theme.colors.border,
+      strokeDasharray: "",
+    },
+  };
+
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={THEME.colors.primary} />
-        <Text style={styles.loadingText}>Analyzing your progress...</Text>
+      <View
+        style={[styles.centered, { backgroundColor: theme.colors.background }]}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
+          Analyzing your progress...
+        </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <StatusBar barStyle="light-content" />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
 
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Insights</Text>
-        <Text style={styles.title}>Track Your Growth</Text>
+        <Text style={[styles.welcomeText, { color: theme.colors.primary }]}>
+          Insights
+        </Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          Track Your Growth
+        </Text>
       </View>
 
       {stats && (
@@ -160,30 +182,34 @@ export const AnalyticsScreen = () => {
             style={[
               styles.badgeCard,
               {
-                borderColor: getBadgeInfo(stats.consistencyScore).color + "40",
+                borderColor:
+                  getBadgeInfo(stats.consistencyScore, theme).color + "40",
                 backgroundColor:
-                  getBadgeInfo(stats.consistencyScore).color + "10",
+                  getBadgeInfo(stats.consistencyScore, theme).color + "10",
               },
             ]}
           >
             <View
               style={[
                 styles.badgeIcon,
-                { backgroundColor: getBadgeInfo(stats.consistencyScore).color },
+                {
+                  backgroundColor: getBadgeInfo(stats.consistencyScore, theme)
+                    .color,
+                },
               ]}
             >
               <Ionicons
                 name={
-                  getBadgeInfo(stats.consistencyScore)
+                  getBadgeInfo(stats.consistencyScore, theme)
                     .icon as keyof typeof Ionicons.glyphMap
                 }
                 size={24}
-                color={THEME.colors.background}
+                color={theme.colors.background}
               />
             </View>
             <View style={styles.badgeInfo}>
-              <Text style={styles.badgeLabel}>
-                Rank: {getBadgeInfo(stats.consistencyScore).title}
+              <Text style={[styles.badgeLabel, { color: theme.colors.text }]}>
+                Rank: {getBadgeInfo(stats.consistencyScore, theme).title}
               </Text>
               <Text style={styles.badgeDesc}>
                 {stats.consistencyScore >= 80
@@ -198,85 +224,138 @@ export const AnalyticsScreen = () => {
       )}
 
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
+        <View
+          style={[
+            styles.statCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <View
             style={[
               styles.iconBox,
-              { backgroundColor: THEME.colors.primary + "15" },
+              { backgroundColor: theme.colors.primary + "15" },
             ]}
           >
-            <Ionicons name="flame" size={20} color={THEME.colors.primary} />
+            <Ionicons name="flame" size={20} color={theme.colors.primary} />
           </View>
-          <Text style={styles.statValue}>{stats?.streak || 0}</Text>
-          <Text style={styles.statLabel}>Current Streak</Text>
+          <Text style={[styles.statValue, { color: theme.colors.text }]}>
+            {stats?.streak || 0}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+            Current Streak
+          </Text>
         </View>
 
-        <View style={styles.statCard}>
+        <View
+          style={[
+            styles.statCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <View
             style={[
               styles.iconBox,
-              { backgroundColor: THEME.colors.action + "15" },
+              { backgroundColor: theme.colors.action + "15" },
             ]}
           >
-            <Ionicons name="medal" size={20} color={THEME.colors.action} />
+            <Ionicons name="medal" size={20} color={theme.colors.action} />
           </View>
-          <Text style={styles.statValue}>{stats?.longestStreak || 0}</Text>
-          <Text style={styles.statLabel}>Best Streak</Text>
+          <Text style={[styles.statValue, { color: theme.colors.text }]}>
+            {stats?.longestStreak || 0}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+            Best Streak
+          </Text>
         </View>
       </View>
 
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
+        <View
+          style={[
+            styles.statCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <View
             style={[
               styles.iconBox,
-              { backgroundColor: THEME.colors.secondary + "15" },
+              { backgroundColor: theme.colors.secondary + "15" },
             ]}
           >
             <Ionicons
               name="calendar"
               size={20}
-              color={THEME.colors.secondary}
+              color={theme.colors.secondary}
             />
           </View>
           <View style={styles.rowBetween}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>
               {stats?.consistencyScore || 0}%
             </Text>
           </View>
-          <Text style={styles.statLabel}>Monthly Consistency</Text>
-          <View style={styles.progressTrack}>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+            Monthly Consistency
+          </Text>
+          <View
+            style={[
+              styles.progressTrack,
+              { backgroundColor: theme.colors.background },
+            ]}
+          >
             <View
               style={[
                 styles.progressBar,
                 {
                   width: `${stats?.consistencyScore || 0}%`,
-                  backgroundColor: THEME.colors.secondary,
+                  backgroundColor: theme.colors.secondary,
                 },
               ]}
             />
           </View>
         </View>
 
-        <View style={styles.statCard}>
+        <View
+          style={[
+            styles.statCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <View
             style={[
               styles.iconBox,
-              { backgroundColor: THEME.colors.textMuted + "15" },
+              { backgroundColor: theme.colors.textMuted + "15" },
             ]}
           >
-            <Ionicons name="trophy" size={20} color={THEME.colors.textMuted} />
+            <Ionicons name="trophy" size={20} color={theme.colors.textMuted} />
           </View>
-          <Text style={styles.statValue}>{stats?.commits || 0}</Text>
-          <Text style={styles.statLabel}>Total Workouts</Text>
+          <Text style={[styles.statValue, { color: theme.colors.text }]}>
+            {stats?.commits || 0}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+            Total Workouts
+          </Text>
         </View>
       </View>
 
       {prs.length > 0 && (
         <View style={styles.section}>
           <View style={styles.chartHeader}>
-            <Ionicons name="ribbon" size={18} color={THEME.colors.action} />
-            <Text style={styles.chartTitle}>Personal Records</Text>
+            <Ionicons name="ribbon" size={18} color={theme.colors.action} />
+            <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+              Personal Records
+            </Text>
           </View>
           <ScrollView
             horizontal
@@ -284,12 +363,28 @@ export const AnalyticsScreen = () => {
             style={styles.prScroller}
           >
             {prs.map((pr, index) => (
-              <View key={index} style={styles.prCard}>
-                <Text style={styles.prWeight}>{pr.weight} kg</Text>
-                <Text style={styles.prName} numberOfLines={1}>
+              <View
+                key={index}
+                style={[
+                  styles.prCard,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.prWeight, { color: theme.colors.action }]}>
+                  {pr.weight} kg
+                </Text>
+                <Text
+                  style={[styles.prName, { color: theme.colors.text }]}
+                  numberOfLines={1}
+                >
                   {pr.exerciseName}
                 </Text>
-                <Text style={styles.prDate}>
+                <Text
+                  style={[styles.prDate, { color: theme.colors.textMuted }]}
+                >
                   {new Date(pr.date).toLocaleDateString()}
                 </Text>
               </View>
@@ -323,13 +418,27 @@ export const AnalyticsScreen = () => {
                 }}
                 style={[
                   styles.exTag,
-                  selectedExercise === ex && styles.exTagActive,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                  selectedExercise === ex && [
+                    styles.exTagActive,
+                    {
+                      borderColor: theme.colors.primary,
+                      backgroundColor: theme.colors.primary + "20",
+                    },
+                  ],
                 ]}
               >
                 <Text
                   style={[
                     styles.exTagText,
-                    selectedExercise === ex && styles.exTagTextActive,
+                    { color: theme.colors.textMuted },
+                    selectedExercise === ex && [
+                      styles.exTagTextActive,
+                      { color: theme.colors.primary },
+                    ],
                   ]}
                 >
                   {ex}
@@ -369,10 +478,20 @@ export const AnalyticsScreen = () => {
 
       <View style={styles.chartSection}>
         <View style={styles.chartHeader}>
-          <Ionicons name="bar-chart" size={18} color={THEME.colors.primary} />
-          <Text style={styles.chartTitle}>Activity this Week</Text>
+          <Ionicons name="bar-chart" size={18} color={theme.colors.primary} />
+          <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+            Activity this Week
+          </Text>
         </View>
-        <View style={styles.chartWrapper}>
+        <View
+          style={[
+            styles.chartWrapper,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <BarChart
             data={chartData}
             width={screenWidth - THEME.spacing.lg * 2 - 20}
@@ -389,10 +508,20 @@ export const AnalyticsScreen = () => {
 
       <View style={styles.chartSection}>
         <View style={styles.chartHeader}>
-          <Ionicons name="trending-up" size={18} color={THEME.colors.action} />
-          <Text style={styles.chartTitle}>Volume Progress</Text>
+          <Ionicons name="trending-up" size={18} color={theme.colors.action} />
+          <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+            Volume Progress
+          </Text>
         </View>
-        <View style={styles.chartWrapper}>
+        <View
+          style={[
+            styles.chartWrapper,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
           <LineChart
             data={volumeChartData}
             width={screenWidth - THEME.spacing.lg * 2 - 20}
@@ -414,31 +543,31 @@ export const AnalyticsScreen = () => {
   );
 };
 
-const getBadgeInfo = (consistency: number) => {
+const getBadgeInfo = (consistency: number, theme: Theme) => {
   if (consistency >= 80)
     return {
       title: "Elite Athlete",
-      color: THEME.colors.primary,
+      color: theme.colors.primary,
       icon: "ribbon",
       level: 3,
     };
   if (consistency >= 50)
     return {
       title: "Consistent Grinder",
-      color: THEME.colors.secondary,
+      color: theme.colors.secondary,
       icon: "fitness",
       level: 2,
     };
   if (consistency >= 20)
     return {
       title: "Dedicated Novice",
-      color: THEME.colors.action,
+      color: theme.colors.action,
       icon: "walk",
       level: 1,
     };
   return {
     title: "Getting Started",
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     icon: "star-outline",
     level: 0,
   };

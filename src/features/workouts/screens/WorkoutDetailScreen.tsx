@@ -17,6 +17,7 @@ import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/types";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { useWorkoutById, useWorkoutActions, Exercise } from "../workout.store";
 import { useSessionActions } from "@/features/sessions/session.store";
 import { AddExerciseModal } from "../components/AddExerciseModal";
@@ -40,12 +41,15 @@ export const WorkoutDetailScreen = memo(() => {
   const { workoutId: id } = route.params;
 
   const workout = useWorkoutById(id);
-  const { deleteWorkout, deleteExercise } = useWorkoutActions();
+  const { duplicateWorkout, deleteWorkout, deleteExercise } =
+    useWorkoutActions();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingExercise, setEditingExercise] =
     useState<EditingExercise | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const { theme, themeType } = useTheme();
   const { startSession } = useSessionActions();
 
   const handleStartSession = useCallback(async () => {
@@ -59,6 +63,18 @@ export const WorkoutDetailScreen = memo(() => {
       }
     }
   }, [id, workout, startSession, navigation]);
+
+  const handleDuplicate = useCallback(async () => {
+    setIsDuplicating(true);
+    try {
+      await duplicateWorkout(id);
+      Alert.alert("Success", "Workout duplicated successfully");
+    } catch (e) {
+      Alert.alert("Error", "Failed to duplicate workout");
+    } finally {
+      setIsDuplicating(false);
+    }
+  }, [duplicateWorkout, id]);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -128,6 +144,18 @@ export const WorkoutDetailScreen = memo(() => {
       headerRight: () => (
         <View style={styles.headerRight}>
           <TouchableOpacity
+            onPress={handleDuplicate}
+            style={styles.headerAction}
+            disabled={isDuplicating}
+            hitSlop={15}
+          >
+            {isDuplicating ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Ionicons name="copy-outline" size={20} color="#FFFFFF" />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() =>
               navigation.navigate("EditWorkout", { workoutId: id })
             }
@@ -146,7 +174,7 @@ export const WorkoutDetailScreen = memo(() => {
         </View>
       ),
     });
-  }, [navigation, handleDelete, id]);
+  }, [navigation, handleDelete, handleDuplicate, id, isDuplicating]);
 
   if (!workout) {
     return (
@@ -157,7 +185,9 @@ export const WorkoutDetailScreen = memo(() => {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <StatusBar
         barStyle="light-content"
         translucent
@@ -179,7 +209,7 @@ export const WorkoutDetailScreen = memo(() => {
             <View
               style={[
                 styles.heroImage,
-                { backgroundColor: THEME.colors.surfaceSubtle },
+                { backgroundColor: theme.colors.surfaceSubtle },
               ]}
             />
           )}
@@ -198,14 +228,29 @@ export const WorkoutDetailScreen = memo(() => {
 
         <View style={styles.mainContent}>
           {workout.video_uri && (
-            <View style={styles.videoCard}>
-              <View style={styles.videoHeader}>
+            <View
+              style={[
+                styles.videoCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.videoHeader,
+                  { borderBottomColor: theme.colors.border },
+                ]}
+              >
                 <Ionicons
                   name="videocam"
                   size={16}
-                  color={THEME.colors.primary}
+                  color={theme.colors.primary}
                 />
-                <Text style={styles.videoLabel}>Technique Video</Text>
+                <Text style={[styles.videoLabel, { color: theme.colors.text }]}>
+                  Technique Video
+                </Text>
               </View>
               <VideoPlayer uri={workout.video_uri} />
             </View>
@@ -213,17 +258,30 @@ export const WorkoutDetailScreen = memo(() => {
 
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={styles.sectionTitle}>Exercises</Text>
-              <Text style={styles.sectionSubtitle}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Exercises
+              </Text>
+              <Text
+                style={[
+                  styles.sectionSubtitle,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 {workout.exercises?.length || 0} Movements
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.addButton}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
               onPress={openAddModal}
               activeOpacity={0.7}
             >
-              <Ionicons name="add" size={24} color={THEME.colors.primary} />
+              <Ionicons name="add" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -233,11 +291,15 @@ export const WorkoutDetailScreen = memo(() => {
                 <Ionicons
                   name="fitness-outline"
                   size={48}
-                  color={THEME.colors.surfaceSubtle}
+                  color={theme.colors.surfaceSubtle}
                 />
-                <Text style={styles.emptyText}>No exercises added yet</Text>
+                <Text
+                  style={[styles.emptyText, { color: theme.colors.textMuted }]}
+                >
+                  No exercises added yet
+                </Text>
                 <TouchableOpacity onPress={openAddModal}>
-                  <Text style={{ color: THEME.colors.primary, marginTop: 8 }}>
+                  <Text style={{ color: theme.colors.primary, marginTop: 8 }}>
                     Add your first exercise
                   </Text>
                 </TouchableOpacity>
@@ -248,10 +310,21 @@ export const WorkoutDetailScreen = memo(() => {
                   key={ex.id}
                   onPress={() => openEditModal(ex)}
                   activeOpacity={0.7}
-                  style={styles.exerciseCard}
+                  style={[
+                    styles.exerciseCard,
+                    {
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
                 >
                   <View style={styles.exerciseRow}>
-                    <View style={styles.thumbnailContainer}>
+                    <View
+                      style={[
+                        styles.thumbnailContainer,
+                        { backgroundColor: theme.colors.surfaceSubtle },
+                      ]}
+                    >
                       {ex.image_uri ? (
                         <Image
                           source={{ uri: ex.image_uri }}
@@ -260,16 +333,34 @@ export const WorkoutDetailScreen = memo(() => {
                         />
                       ) : (
                         <View style={styles.thumbnailPlaceholder}>
-                          <Text style={styles.indexText}>{index + 1}</Text>
+                          <Text
+                            style={[
+                              styles.indexText,
+                              { color: theme.colors.textMuted },
+                            ]}
+                          >
+                            {index + 1}
+                          </Text>
                         </View>
                       )}
                     </View>
 
                     <View style={styles.exerciseInfo}>
-                      <Text style={styles.exerciseName} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.exerciseName,
+                          { color: theme.colors.text },
+                        ]}
+                        numberOfLines={1}
+                      >
                         {ex.name}
                       </Text>
-                      <Text style={styles.statValue}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          { color: theme.colors.textMuted },
+                        ]}
+                      >
                         {ex.sets} Sets • {ex.reps} Reps
                       </Text>
                     </View>
@@ -382,7 +473,6 @@ const styles = StyleSheet.create({
   mainContent: {
     paddingHorizontal: THEME.spacing.lg,
     marginTop: -20,
-    backgroundColor: THEME.colors.background,
     borderTopLeftRadius: THEME.borderRadius.lg,
     borderTopRightRadius: THEME.borderRadius.lg,
     paddingTop: THEME.spacing.xl,

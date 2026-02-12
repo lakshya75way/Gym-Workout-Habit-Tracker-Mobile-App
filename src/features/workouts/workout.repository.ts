@@ -233,4 +233,65 @@ export class WorkoutRepository {
     );
     SyncService.pushChanges(userId);
   }
+
+  static async duplicateWorkout(
+    workoutId: string,
+    userId: string,
+  ): Promise<Workout> {
+    const db = await getDb();
+    const source = await this.getWorkoutById(workoutId, userId);
+    if (!source) throw new Error("Source workout not found");
+
+    const newId = Crypto.randomUUID();
+    const now = new Date().toISOString();
+
+    await db.runAsync(
+      `
+      INSERT INTO workouts (id, user_id, name, description, day_mask, muscle_group, image_uri, video_uri, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        newId,
+        userId,
+        `${source.name} (Copy)`,
+        source.description || "",
+        source.day_mask,
+        source.muscle_group,
+        source.image_uri || "",
+        source.video_uri || "",
+        now,
+        now,
+      ],
+    );
+
+    if (source.exercises && source.exercises.length > 0) {
+      for (const ex of source.exercises) {
+        const exId = Crypto.randomUUID();
+        await db.runAsync(
+          `
+          INSERT INTO exercises (id, user_id, workout_id, name, sets, reps, sort_order, image_uri, video_uri, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            exId,
+            userId,
+            newId,
+            ex.name,
+            ex.sets,
+            ex.reps,
+            ex.sort_order,
+            ex.image_uri || null,
+            ex.video_uri || null,
+            now,
+            now,
+          ],
+        );
+      }
+    }
+
+    const duplicated = await this.getWorkoutById(newId, userId);
+    if (!duplicated) throw new Error("Failed to duplicate workout");
+    SyncService.pushChanges(userId);
+    return duplicated;
+  }
 }

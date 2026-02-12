@@ -12,6 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { useWorkouts, useWorkoutActions } from "../workout.store";
 import { WorkoutCard } from "../components/WorkoutCard";
 import { Workout } from "../workout.schema";
@@ -24,11 +25,15 @@ export const WorkoutListScreen = memo(() => {
   const workouts = useWorkouts();
   const { loadWorkouts } = useWorkoutActions();
 
+  const { theme, themeType } = useTheme();
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>My Workouts</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            My Workouts
+          </Text>
         </View>
       ),
       headerRight: () => (
@@ -36,7 +41,7 @@ export const WorkoutListScreen = memo(() => {
           onPress={() => navigation.navigate("CreateWorkout")}
           style={styles.headerIconButton}
         >
-          <Ionicons name="add" size={24} color={THEME.colors.primary} />
+          <Ionicons name="add" size={24} color={theme.colors.primary} />
         </Pressable>
       ),
       headerLeft: () => (
@@ -47,12 +52,12 @@ export const WorkoutListScreen = memo(() => {
           <Ionicons
             name="notifications-outline"
             size={22}
-            color={THEME.colors.text}
+            color={theme.colors.text}
           />
         </Pressable>
       ),
     });
-  }, [navigation]);
+  }, [navigation, theme]);
 
   useEffect(() => {
     loadWorkouts();
@@ -73,8 +78,12 @@ export const WorkoutListScreen = memo(() => {
   const keyExtractor = useCallback((item: Workout) => item.id, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
       <FlatList
         data={workouts}
         renderItem={renderItem}
@@ -82,30 +91,57 @@ export const WorkoutListScreen = memo(() => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeTitle}>Keep it up!</Text>
-            <Text style={styles.welcomeSubtitle}>
+            <Text style={[styles.welcomeTitle, { color: theme.colors.text }]}>
+              Keep it up!
+            </Text>
+            <Text
+              style={[
+                styles.welcomeSubtitle,
+                { color: theme.colors.textMuted },
+              ]}
+            >
               You have {workouts.length} active plans
             </Text>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
+            <View
+              style={[
+                styles.emptyIconContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
               <Ionicons
                 name="leaf-outline"
                 size={64}
-                color={THEME.colors.surfaceSubtle}
+                color={theme.colors.surfaceSubtle}
               />
             </View>
-            <Text style={styles.emptyText}>No workouts yet</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+              No workouts yet
+            </Text>
+            <Text
+              style={[styles.emptySubtext, { color: theme.colors.textMuted }]}
+            >
               Your journey starts with the first plan.
             </Text>
             <Pressable
-              style={styles.createButton}
+              style={[
+                styles.createButton,
+                { backgroundColor: theme.colors.primary },
+              ]}
               onPress={() => navigation.navigate("CreateWorkout")}
             >
-              <Text style={styles.createButtonText}>
+              <Text
+                style={[
+                  styles.createButtonText,
+                  { color: theme.colors.background },
+                ]}
+              >
                 Create Your First Workout
               </Text>
             </Pressable>

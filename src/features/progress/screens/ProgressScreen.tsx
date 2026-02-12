@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from "react-native";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuthStore } from "@/features/auth/auth.store";
@@ -24,6 +25,7 @@ const { width } = Dimensions.get("window");
 const COLUMN_WIDTH = (width - THEME.spacing.lg * 3) / 2;
 
 export const ProgressScreen = () => {
+  const { theme, themeType } = useTheme();
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [compareMode, setCompareMode] = useState(false);
@@ -142,7 +144,17 @@ export const ProgressScreen = () => {
     isSelected: boolean;
   }) => (
     <Pressable
-      style={[styles.card, isSelected && styles.selectedCard]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+        isSelected && [
+          styles.selectedCard,
+          { borderColor: theme.colors.primary },
+        ],
+      ]}
       onLongPress={() => handleDeletePhoto(item.id)}
       onPress={() => toggleSelect(item.id)}
     >
@@ -159,7 +171,7 @@ export const ProgressScreen = () => {
             <Ionicons
               name="checkmark-circle"
               size={18}
-              color={THEME.colors.primary}
+              color={theme.colors.primary}
             />
           </View>
         )}
@@ -175,35 +187,65 @@ export const ProgressScreen = () => {
 
   if (compareMode && selectedPhotos.length === 2) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.compareHeader}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[
+            styles.compareHeader,
+            {
+              backgroundColor: theme.colors.background,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => setCompareMode(false)}
             style={styles.backBtn}
           >
-            <Ionicons name="close" size={24} color={THEME.colors.text} />
+            <Ionicons name="close" size={24} color={theme.colors.text} />
           </TouchableOpacity>
-          <Text style={styles.compareTitle}>Side-by-Side</Text>
+          <Text style={[styles.compareTitle, { color: theme.colors.text }]}>
+            Side-by-Side
+          </Text>
         </View>
         <ScrollView contentContainerStyle={styles.compareScroll}>
           <View style={styles.compareWrapper}>
             <View style={styles.compareItem}>
-              <Text style={styles.compareLabel}>BEFORE</Text>
+              <Text
+                style={[styles.compareLabel, { color: theme.colors.primary }]}
+              >
+                BEFORE
+              </Text>
               <Image
                 source={{ uri: selectedPhotos[0].uri }}
-                style={styles.compareImage}
+                style={[
+                  styles.compareImage,
+                  { backgroundColor: theme.colors.surface },
+                ]}
               />
-              <Text style={styles.compareDate}>
+              <Text
+                style={[styles.compareDate, { color: theme.colors.textMuted }]}
+              >
                 {new Date(selectedPhotos[0].taken_at).toLocaleDateString()}
               </Text>
             </View>
             <View style={styles.compareItem}>
-              <Text style={styles.compareLabel}>AFTER</Text>
+              <Text
+                style={[styles.compareLabel, { color: theme.colors.primary }]}
+              >
+                AFTER
+              </Text>
               <Image
                 source={{ uri: selectedPhotos[1].uri }}
-                style={styles.compareImage}
+                style={[
+                  styles.compareImage,
+                  { backgroundColor: theme.colors.surface },
+                ]}
               />
-              <Text style={styles.compareDate}>
+              <Text
+                style={[styles.compareDate, { color: theme.colors.textMuted }]}
+              >
                 {new Date(selectedPhotos[1].taken_at).toLocaleDateString()}
               </Text>
             </View>
@@ -214,33 +256,48 @@ export const ProgressScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.subtitle}>Visual Journey</Text>
-          <Text style={styles.title}>Progress Gallery</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.primary }]}>
+            Visual Journey
+          </Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Progress Gallery
+          </Text>
         </View>
         <View style={styles.headerRight}>
           {selectedIds.length === 2 && (
             <TouchableOpacity
-              style={[styles.actionBtn, { marginRight: THEME.spacing.sm }]}
+              style={[
+                styles.actionBtn,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  marginRight: THEME.spacing.sm,
+                },
+              ]}
               onPress={() => setCompareMode(true)}
             >
               <Ionicons
                 name="git-compare-outline"
                 size={20}
-                color={THEME.colors.primary}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, { backgroundColor: theme.colors.primary }]}
             onPress={handleAddPhoto}
             activeOpacity={0.8}
           >
-            <Ionicons name="add" size={32} color={THEME.colors.background} />
+            <Ionicons name="add" size={32} color={theme.colors.background} />
           </TouchableOpacity>
         </View>
       </View>
@@ -256,15 +313,27 @@ export const ProgressScreen = () => {
         columnWrapperStyle={styles.columnWrapper}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
+            <View
+              style={[
+                styles.emptyIconContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
               <Ionicons
                 name="images-outline"
                 size={64}
-                color={THEME.colors.surfaceSubtle}
+                color={theme.colors.surfaceSubtle}
               />
             </View>
-            <Text style={styles.emptyText}>No transformation yet</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+              No transformation yet
+            </Text>
+            <Text
+              style={[styles.emptySubtext, { color: theme.colors.textMuted }]}
+            >
               Capture your first photo to start your timeline.
             </Text>
           </View>

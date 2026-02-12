@@ -10,6 +10,7 @@ import {
 import { Exercise } from "@/features/workouts/workout.schema";
 import { SetLog } from "../session.schema";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 
 interface ExerciseLogItemProps {
   exercise: Exercise;
@@ -22,6 +23,7 @@ export const ExerciseLogItem = ({
   onLogSet,
   logs,
 }: ExerciseLogItemProps) => {
+  const { theme } = useTheme();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState(exercise.reps.toString());
 
@@ -46,48 +48,88 @@ export const ExerciseLogItem = ({
   }, [weight, reps, onLogSet]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.name}>{exercise.name}</Text>
-      <Text style={styles.target}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+      ]}
+    >
+      <Text style={[styles.name, { color: theme.colors.text }]}>
+        {exercise.name}
+      </Text>
+      <Text style={[styles.target, { color: theme.colors.textMuted }]}>
         Target: {exercise.sets} sets x {exercise.reps} reps
       </Text>
 
       <View style={styles.logsContainer}>
         {logs.map((log, index) => (
-          <View key={log.id} style={styles.logRow}>
-            <Text style={styles.logText}>
+          <View
+            key={log.id}
+            style={[styles.logRow, { borderBottomColor: theme.colors.border }]}
+          >
+            <Text style={[styles.logText, { color: theme.colors.text }]}>
               Set {index + 1}: {log.weight}kg x {log.reps}
             </Text>
-            <Text style={styles.checkMark}>✓</Text>
+            <Text style={[styles.checkMark, { color: theme.colors.primary }]}>
+              ✓
+            </Text>
           </View>
         ))}
       </View>
 
       <View style={styles.inputRow}>
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>kg</Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.textMuted }]}>
+            kg
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text,
+                borderColor: theme.colors.border,
+              },
+            ]}
             value={weight}
             onChangeText={setWeight}
             keyboardType="numeric"
             placeholder="0"
-            placeholderTextColor={THEME.colors.textMuted}
+            placeholderTextColor={theme.colors.textMuted}
           />
         </View>
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>reps</Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.textMuted }]}>
+            reps
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text,
+                borderColor: theme.colors.border,
+              },
+            ]}
             value={reps}
             onChangeText={setReps}
             keyboardType="numeric"
             placeholder="0"
-            placeholderTextColor={THEME.colors.textMuted}
+            placeholderTextColor={theme.colors.textMuted}
           />
         </View>
-        <Pressable style={styles.logButton} onPress={handleLog}>
-          <Text style={styles.logButtonText}>Log</Text>
+        <Pressable
+          style={[styles.logButton, { backgroundColor: theme.colors.primary }]}
+          onPress={handleLog}
+        >
+          <Text
+            style={[styles.logButtonText, { color: theme.colors.background }]}
+          >
+            Log
+          </Text>
         </Pressable>
       </View>
     </View>

@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { useAuthStore } from "../auth.store";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useNavigation } from "@react-navigation/native";
@@ -28,6 +29,7 @@ export const LoginScreen = ({
 }: {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">;
 }) => {
+  const { theme, themeType } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, isLoading } = useAuthStore();
@@ -61,36 +63,60 @@ export const LoginScreen = ({
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <StatusBar barStyle="light-content" />
+        <StatusBar
+          barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+        />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="fitness" size={48} color={THEME.colors.primary} />
+            <View
+              style={[
+                styles.logoContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              <Ionicons name="fitness" size={48} color={theme.colors.primary} />
             </View>
-            <Text style={styles.title}>Forge</Text>
-            <Text style={styles.subtitle}>Unlock Your Potential</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              Forge
+            </Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+              Unlock Your Potential
+            </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email Address</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: theme.colors.textMuted }]}>
+                Email Address
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={THEME.colors.textMuted}
+                  color={theme.colors.textMuted}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="you@example.com"
-                  placeholderTextColor={THEME.colors.textMuted}
+                  placeholderTextColor={theme.colors.textMuted}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -100,18 +126,28 @@ export const LoginScreen = ({
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: theme.colors.textMuted }]}>
+                Password
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={THEME.colors.textMuted}
+                  color={theme.colors.textMuted}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="••••••••"
-                  placeholderTextColor={THEME.colors.textMuted}
+                  placeholderTextColor={theme.colors.textMuted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -120,30 +156,47 @@ export const LoginScreen = ({
             </View>
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                { backgroundColor: theme.colors.primary },
+                isLoading && styles.buttonDisabled,
+              ]}
               onPress={handleLogin}
               disabled={isLoading}
               activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color={THEME.colors.background} />
+                <ActivityIndicator color={theme.colors.background} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    { color: theme.colors.background },
+                  ]}
+                >
+                  Sign In
+                </Text>
               )}
               {!isLoading && (
                 <Ionicons
                   name="arrow-forward"
                   size={20}
-                  color={THEME.colors.background}
+                  color={theme.colors.background}
                 />
               )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>New to Forge? </Text>
+            <Text
+              style={[styles.footerText, { color: theme.colors.textMuted }]}
+            >
+              New to Forge?{" "}
+            </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.linkText}>Create Account</Text>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>
+                Create Account
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

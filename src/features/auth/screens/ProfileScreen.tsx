@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,93 +6,205 @@ import {
   TouchableOpacity,
   Alert,
   SafeAreaView,
+  Switch,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useAuthStore } from "../auth.store";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/types";
+import { MMKVStorage } from "@/storage/mmkv";
 
 export const ProfileScreen = () => {
   const { user, signOut } = useAuthStore();
+  const { theme, themeType, toggleTheme } = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const [restTime, setRestTime] = useState(
+    MMKVStorage.getItem("default_rest_time") || "60",
+  );
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to log out of Forge?", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Log Out",
-        style: "destructive",
-        onPress: signOut,
-      },
+      { text: "Log Out", style: "destructive", onPress: signOut },
     ]);
   };
 
+  const updateRestTime = (val: string) => {
+    const num = parseInt(val);
+    if (!isNaN(num) && num > 0) {
+      MMKVStorage.setItem("default_rest_time", val);
+      setRestTime(val);
+    } else if (val === "") {
+      setRestTime("");
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={40} color={THEME.colors.primary} />
-        </View>
-        <Text style={styles.userName}>
-          {user?.email?.split("@")[0] || "User"}
-        </Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Settings</Text>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate("Reminders")}
-        >
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.header}>
           <View
             style={[
-              styles.iconContainer,
-              { backgroundColor: THEME.colors.surfaceSubtle },
+              styles.avatar,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
             ]}
           >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={THEME.colors.primary}
-            />
+            <Ionicons name="person" size={40} color={theme.colors.primary} />
           </View>
-          <Text style={styles.menuItemText}>Notifications & Reminders</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={THEME.colors.textMuted}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
-          <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: THEME.colors.destructive + "20" },
-            ]}
-          >
-            <Ionicons
-              name="log-out-outline"
-              size={20}
-              color={THEME.colors.destructive}
-            />
-          </View>
-          <Text
-            style={[styles.menuItemText, { color: THEME.colors.destructive }]}
-          >
-            Sign Out
+          <Text style={[styles.userName, { color: theme.colors.text }]}>
+            {user?.email?.split("@")[0] || "User"}
           </Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={[styles.userEmail, { color: theme.colors.textMuted }]}>
+            {user?.email}
+          </Text>
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.versionText}>Forge v1.0.0</Text>
-      </View>
+        <View style={styles.section}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textMuted }]}
+          >
+            App Settings
+          </Text>
+
+          <View
+            style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.surfaceSubtle },
+              ]}
+            >
+              <Ionicons
+                name="moon-outline"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </View>
+            <Text style={[styles.menuItemText, { color: theme.colors.text }]}>
+              Dark Mode
+            </Text>
+            <Switch
+              value={themeType === "dark"}
+              onValueChange={toggleTheme}
+              trackColor={{
+                false: theme.colors.border,
+                true: theme.colors.primary + "80",
+              }}
+              thumbColor={
+                themeType === "dark" ? theme.colors.primary : "#f4f3f4"
+              }
+            />
+          </View>
+
+          <View
+            style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.surfaceSubtle },
+              ]}
+            >
+              <Ionicons
+                name="timer-outline"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </View>
+            <Text style={[styles.menuItemText, { color: theme.colors.text }]}>
+              Rest Timer (sec)
+            </Text>
+            <TextInput
+              style={{
+                color: theme.colors.text,
+                backgroundColor: theme.colors.background,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 8,
+                width: 60,
+                textAlign: "center",
+                fontWeight: "700",
+              }}
+              keyboardType="number-pad"
+              value={restTime}
+              onChangeText={updateRestTime}
+              maxLength={3}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}
+            onPress={() => navigation.navigate("Reminders")}
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.surfaceSubtle },
+              ]}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </View>
+            <Text style={[styles.menuItemText, { color: theme.colors.text }]}>
+              Notifications
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.textMuted}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}
+            onPress={handleSignOut}
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.destructive + "20" },
+              ]}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={theme.colors.destructive}
+              />
+            </View>
+            <Text
+              style={[styles.menuItemText, { color: theme.colors.destructive }]}
+            >
+              Sign Out
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>
+            Forge v1.1.0
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -100,13 +212,10 @@ export const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.background,
   },
   header: {
     alignItems: "center",
-    paddingVertical: THEME.spacing.xxl,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
   },
   avatar: {
     width: 100,
@@ -167,5 +276,14 @@ const styles = StyleSheet.create({
   versionText: {
     ...THEME.typography.caption,
     color: THEME.colors.textMuted,
+  },
+  restInput: {
+    width: 60,
+    textAlign: "center",
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

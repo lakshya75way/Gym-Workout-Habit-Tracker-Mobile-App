@@ -18,11 +18,13 @@ import { THEME } from "@/theme/theme";
 import { useActiveSession, useSessionActions } from "../session.store";
 import { useTimer } from "../hooks/useTimer";
 import { useWorkoutById } from "@/features/workouts/workout.store";
+import { useTheme } from "@/theme/ThemeContext";
 import { ExerciseLogItem } from "../components/ExerciseLogItem";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { ProgressRepository } from "@/features/progress/progress.repository";
+import { PlateCalculatorModal } from "../components/PlateCalculatorModal";
 
 const { width } = Dimensions.get("window");
 
@@ -30,10 +32,12 @@ export const SessionScreen = memo(() => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const session = useActiveSession();
+  const { theme, themeType } = useTheme();
   const { endSession, logSet, autoLogRemaining, togglePause } =
     useSessionActions();
 
   const [isFinishing, setIsFinishing] = React.useState(false);
+  const [isCalculatorVisible, setIsCalculatorVisible] = React.useState(false);
   const workout = useWorkoutById(session?.workout_id ?? "");
 
   const { formattedTime } = useTimer(
@@ -160,52 +164,107 @@ export const SessionScreen = memo(() => {
 
   if (!session || !workout) {
     return (
-      <View style={styles.centered}>
+      <View
+        style={[styles.centered, { backgroundColor: theme.colors.background }]}
+      >
         <Ionicons
           name="fitness-outline"
           size={64}
-          color={THEME.colors.surfaceSubtle}
+          color={theme.colors.surfaceSubtle}
         />
-        <Text style={styles.errorText}>No active session found</Text>
+        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
+          No active session found
+        </Text>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { borderColor: theme.colors.border }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.link}>Go Back</Text>
+          <Text style={[styles.link, { color: theme.colors.primary }]}>
+            Go Back
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
 
-      <View style={[styles.timerHeader, isPaused && styles.timerPaused]}>
+      <View
+        style={[
+          styles.timerHeader,
+          {
+            backgroundColor: theme.colors.surface,
+            borderBottomColor: theme.colors.border,
+          },
+          isPaused && [
+            styles.timerPaused,
+            { backgroundColor: theme.colors.surfaceSubtle + "80" },
+          ],
+        ]}
+      >
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={togglePause} style={styles.controlBtn}>
+          <TouchableOpacity
+            onPress={togglePause}
+            style={[
+              styles.controlBtn,
+              { backgroundColor: theme.colors.surfaceSubtle },
+            ]}
+          >
             <Ionicons
               name={isPaused ? "play" : "pause"}
               size={24}
-              color={isPaused ? THEME.colors.primary : THEME.colors.text}
+              color={isPaused ? theme.colors.primary : theme.colors.text}
             />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.workoutNameLabel} numberOfLines={1}>
+            <Text
+              style={[styles.workoutNameLabel, { color: theme.colors.text }]}
+              numberOfLines={1}
+            >
               {workout.name}
             </Text>
-            <Text style={[styles.statusLabel, isPaused && styles.statusPaused]}>
+            <Text
+              style={[
+                styles.statusLabel,
+                { color: theme.colors.primary },
+                isPaused && styles.statusPaused,
+              ]}
+            >
               {isPaused ? "PAUSED" : "RECORDING"}
             </Text>
           </View>
           <TouchableOpacity
-            onPress={handleFinish}
-            style={styles.finishHeaderBtn}
+            onPress={() => setIsCalculatorVisible(true)}
+            style={[
+              styles.controlBtn,
+              { backgroundColor: theme.colors.surfaceSubtle, marginRight: 8 },
+            ]}
           >
-            <Ionicons name="stop" size={24} color={THEME.colors.destructive} />
+            <Ionicons
+              name="calculator-outline"
+              size={24}
+              color={theme.colors.text}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleFinish}
+            style={[
+              styles.finishHeaderBtn,
+              { backgroundColor: theme.colors.destructive + "15" },
+            ]}
+          >
+            <Ionicons name="stop" size={24} color={theme.colors.destructive} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.timerValue}>{formattedTime}</Text>
+        <Text style={[styles.timerValue, { color: theme.colors.text }]}>
+          {formattedTime}
+        </Text>
       </View>
 
       <ScrollView
@@ -224,7 +283,9 @@ export const SessionScreen = memo(() => {
           ))}
           {(!workout.exercises || workout.exercises.length === 0) && (
             <View style={styles.emptyState}>
-              <Text style={styles.instruction}>
+              <Text
+                style={[styles.instruction, { color: theme.colors.textMuted }]}
+              >
                 No exercises in this workout.
               </Text>
             </View>
@@ -232,20 +293,37 @@ export const SessionScreen = memo(() => {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: theme.colors.background,
+            borderTopColor: theme.colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.finishBtn}
+          style={[styles.finishBtn, { backgroundColor: theme.colors.primary }]}
           onPress={handleFinish}
           activeOpacity={0.8}
         >
-          <Text style={styles.finishBtnText}>Finish Workout</Text>
+          <Text
+            style={[styles.finishBtnText, { color: theme.colors.background }]}
+          >
+            Finish Workout
+          </Text>
           <Ionicons
             name="checkmark-done"
             size={20}
-            color={THEME.colors.background}
+            color={theme.colors.background}
           />
         </TouchableOpacity>
       </View>
+
+      <PlateCalculatorModal
+        isVisible={isCalculatorVisible}
+        onClose={() => setIsCalculatorVisible(false)}
+      />
     </SafeAreaView>
   );
 });

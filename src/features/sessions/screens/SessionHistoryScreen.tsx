@@ -13,6 +13,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/types";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { SessionRepository } from "../session.repository";
 import { Session } from "../session.schema";
 import { useAuthStore } from "@/features/auth/auth.store";
@@ -21,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Logger } from "@/utils/logger";
 
 const SessionHistoryItem = ({ session }: { session: Session }) => {
+  const { theme } = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const workout = useWorkoutById(session.workout_id);
@@ -36,46 +38,70 @@ const SessionHistoryItem = ({ session }: { session: Session }) => {
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+      ]}
       onPress={() =>
         navigation.navigate("SessionDetail", { sessionId: session.id })
       }
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
-        <View style={styles.workoutIconBox}>
+        <View
+          style={[
+            styles.workoutIconBox,
+            { backgroundColor: theme.colors.primary + "15" },
+          ]}
+        >
           <Ionicons
             name="checkmark-done-circle"
             size={24}
-            color={THEME.colors.primary}
+            color={theme.colors.primary}
           />
         </View>
         <View style={styles.headerInfo}>
-          <Text style={styles.workoutName}>
+          <Text style={[styles.workoutName, { color: theme.colors.text }]}>
             {session.workout_name || workout?.name || "Deleted Workout"}
           </Text>
-          <Text style={styles.dateText}>
+          <Text style={[styles.dateText, { color: theme.colors.textMuted }]}>
             {date} • {time}
           </Text>
         </View>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>Done</Text>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: theme.colors.primary + "20" },
+          ]}
+        >
+          <Text style={[styles.statusText, { color: theme.colors.primary }]}>
+            Done
+          </Text>
         </View>
       </View>
 
-      <View style={styles.cardFooter}>
+      <View
+        style={[styles.cardFooter, { borderTopColor: theme.colors.border }]}
+      >
         <View style={styles.footerStat}>
           <Ionicons
             name="time-outline"
             size={14}
-            color={THEME.colors.textMuted}
+            color={theme.colors.textMuted}
           />
-          <Text style={styles.footerStatText}>Completed</Text>
+          <Text
+            style={[styles.footerStatText, { color: theme.colors.textMuted }]}
+          >
+            Completed
+          </Text>
         </View>
         <Ionicons
           name="chevron-forward"
           size={16}
-          color={THEME.colors.border}
+          color={theme.colors.border}
         />
       </View>
     </TouchableOpacity>
@@ -111,20 +137,32 @@ export const SessionHistoryScreen = () => {
     }, [loadSessions]),
   );
 
+  const { theme, themeType } = useTheme();
+
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={THEME.colors.primary} />
+      <View
+        style={[styles.centered, { backgroundColor: theme.colors.background }]}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
       <View style={styles.header}>
-        <Text style={styles.subtitle}>Audit Trail</Text>
-        <Text style={styles.title}>Workout Log</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.primary }]}>
+          Audit Trail
+        </Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          Workout Log
+        </Text>
       </View>
 
       <FlatList
@@ -133,15 +171,27 @@ export const SessionHistoryScreen = () => {
         renderItem={({ item }) => <SessionHistoryItem session={item} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
+            <View
+              style={[
+                styles.emptyIconContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
               <Ionicons
                 name="calendar-outline"
                 size={64}
-                color={THEME.colors.surfaceSubtle}
+                color={theme.colors.surfaceSubtle}
               />
             </View>
-            <Text style={styles.emptyText}>No sessions recorded</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+              No sessions recorded
+            </Text>
+            <Text
+              style={[styles.emptySubtext, { color: theme.colors.textMuted }]}
+            >
               Finish a workout to see it here.
             </Text>
           </View>

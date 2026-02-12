@@ -16,6 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { RootStackParamList } from "@/navigation/types";
 import { useWorkouts, useWorkoutActions } from "../workout.store";
 import { Workout } from "../workout.schema";
@@ -37,6 +38,7 @@ const DAYS = [
 export const WeeklyPlanScreen = memo(() => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { theme, themeType } = useTheme();
   const workouts = useWorkouts();
   const { updateWorkout } = useWorkoutActions();
 
@@ -143,16 +145,35 @@ export const WeeklyPlanScreen = memo(() => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>Weekly Schedule</Text>
-          <Text style={styles.headerTitle}>{selectedDayLabel}</Text>
+          <Text
+            style={[styles.headerSubtitle, { color: theme.colors.primary }]}
+          >
+            Weekly Schedule
+          </Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            {selectedDayLabel}
+          </Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={handleTopAddPress}>
-          <Ionicons name="add" size={24} color={THEME.colors.primary} />
+        <TouchableOpacity
+          style={[
+            styles.addBtn,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+          onPress={handleTopAddPress}
+        >
+          <Ionicons name="add" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -172,15 +193,37 @@ export const WeeklyPlanScreen = memo(() => {
                 onPress={() => setSelectedDay(day.id)}
                 style={[
                   styles.dayChip,
-                  isSelected && styles.dayChipSelected,
-                  isToday && !isSelected && styles.dayChipToday,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                  isSelected && [
+                    styles.dayChipSelected,
+                    {
+                      backgroundColor: theme.colors.primary,
+                      borderColor: theme.colors.primary,
+                    },
+                  ],
+                  isToday &&
+                    !isSelected && [
+                      styles.dayChipToday,
+                      { borderColor: theme.colors.primary + "40" },
+                    ],
                 ]}
               >
                 <Text
                   style={[
                     styles.dayLabel,
-                    isSelected && styles.dayLabelSelected,
-                    isToday && !isSelected && styles.dayLabelToday,
+                    { color: theme.colors.textMuted },
+                    isSelected && [
+                      styles.dayLabelSelected,
+                      { color: theme.colors.background },
+                    ],
+                    isToday &&
+                      !isSelected && [
+                        styles.dayLabelToday,
+                        { color: theme.colors.primary },
+                      ],
                   ]}
                 >
                   {day.label}
@@ -189,8 +232,9 @@ export const WeeklyPlanScreen = memo(() => {
                   <View
                     style={[
                       styles.todayIndicator,
+                      { backgroundColor: theme.colors.primary },
                       isSelected && {
-                        backgroundColor: THEME.colors.background,
+                        backgroundColor: theme.colors.background,
                       },
                     ]}
                   />
@@ -208,22 +252,44 @@ export const WeeklyPlanScreen = memo(() => {
       >
         {filteredWorkouts.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconCircle}>
+            <View
+              style={[
+                styles.emptyIconCircle,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
               <Ionicons
                 name="calendar-outline"
                 size={48}
-                color={THEME.colors.surfaceSubtle}
+                color={theme.colors.surfaceSubtle}
               />
             </View>
-            <Text style={styles.emptyTitle}>Rest Day</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+              Rest Day
+            </Text>
+            <Text
+              style={[styles.emptySubtitle, { color: theme.colors.textMuted }]}
+            >
               No workouts scheduled for {selectedDayLabel}. Enjoy your recovery!
             </Text>
             <TouchableOpacity
-              style={styles.scheduleBtn}
+              style={[
+                styles.scheduleBtn,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
               onPress={() => setIsLibraryOpen(true)}
             >
-              <Text style={styles.scheduleBtnText}>Assign from Library</Text>
+              <Text
+                style={[styles.scheduleBtnText, { color: theme.colors.text }]}
+              >
+                Assign from Library
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (

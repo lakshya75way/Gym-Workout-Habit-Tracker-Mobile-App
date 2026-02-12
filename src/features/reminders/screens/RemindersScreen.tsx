@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { NotificationService } from "@/services/notification.service";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -29,6 +30,7 @@ const DAYS = [
 ];
 
 export const RemindersScreen = () => {
+  const { theme, themeType } = useTheme();
   const { isEnabled, hour, minute, selectedDays, setReminder, loadSettings } =
     useReminderStore();
 
@@ -96,48 +98,90 @@ export const RemindersScreen = () => {
   currentTime.setMinutes(minute);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <StatusBar
+        barStyle={themeType === "dark" ? "light-content" : "dark-content"}
+      />
 
       <View style={styles.header}>
-        <Text style={styles.subtitle}>Stay Consistent</Text>
-        <Text style={styles.title}>Daily Echo</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.primary }]}>
+          Stay Consistent
+        </Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          Daily Echo
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.row}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
+      >
+        <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
           <View style={styles.labelContainer}>
             <Ionicons
               name="notifications"
               size={22}
-              color={THEME.colors.primary}
+              color={theme.colors.primary}
             />
-            <Text style={styles.label}>Enable Alerts</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Enable Alerts
+            </Text>
           </View>
           <Switch
             value={isEnabled}
             onValueChange={handleToggle}
             trackColor={{
-              false: THEME.colors.border,
-              true: THEME.colors.primary,
+              false: theme.colors.border,
+              true: theme.colors.primary,
             }}
             thumbColor="#FFFFFF"
           />
         </View>
 
         <View style={styles.daySection}>
-          <Text style={styles.sectionTitle}>Active Days</Text>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textMuted }]}
+          >
+            Active Days
+          </Text>
           <View style={styles.daysRow}>
             {DAYS.map((day) => {
               const isActive = selectedDays.includes(day.id);
               return (
                 <Pressable
                   key={day.id}
-                  style={[styles.dayCircle, isActive && styles.dayCircleActive]}
+                  style={[
+                    styles.dayCircle,
+                    {
+                      backgroundColor: theme.colors.background,
+                      borderColor: theme.colors.border,
+                    },
+                    isActive && [
+                      styles.dayCircleActive,
+                      {
+                        backgroundColor: theme.colors.primary,
+                        borderColor: theme.colors.primary,
+                      },
+                    ],
+                  ]}
                   onPress={() => toggleDay(day.id)}
                 >
                   <Text
-                    style={[styles.dayLabel, isActive && styles.dayLabelActive]}
+                    style={[
+                      styles.dayLabel,
+                      { color: theme.colors.text },
+                      isActive && [
+                        styles.dayLabelActive,
+                        { color: theme.colors.background },
+                      ],
+                    ]}
                   >
                     {day.label}
                   </Text>
@@ -148,14 +192,26 @@ export const RemindersScreen = () => {
         </View>
 
         <View style={styles.pickerSection}>
-          <Text style={styles.sectionTitle}>Preferred Time</Text>
-          <View style={styles.pickerWrapper}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textMuted }]}
+          >
+            Preferred Time
+          </Text>
+          <View
+            style={[
+              styles.pickerWrapper,
+              {
+                backgroundColor: theme.colors.background,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
             <DateTimePicker
               value={currentTime}
               mode="time"
               display="spinner"
               onChange={handleTimeChange}
-              textColor={THEME.colors.text}
+              textColor={theme.colors.text}
               style={styles.picker}
             />
           </View>

@@ -32,6 +32,7 @@ interface WorkoutState {
     videoUri?: string,
   ) => Promise<void>;
   deleteExercise: (exerciseId: string, workoutId: string) => Promise<void>;
+  duplicateWorkout: (workoutId: string) => Promise<void>;
 }
 
 const useStore = create<WorkoutState>((set, get) => ({
@@ -264,6 +265,25 @@ const useStore = create<WorkoutState>((set, get) => ({
       set({ workouts: previousWorkouts, error: "Failed to update exercise" });
     }
   },
+
+  duplicateWorkout: async (workoutId: string) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+
+    set({ isLoading: true, error: null });
+    try {
+      const duplicated = await WorkoutRepository.duplicateWorkout(
+        workoutId,
+        user.id,
+      );
+      set((state) => ({
+        workouts: [duplicated, ...state.workouts],
+        isLoading: false,
+      }));
+    } catch (e) {
+      set({ error: "Failed to duplicate workout", isLoading: false });
+    }
+  },
 }));
 
 export const useWorkouts = () => useStore((state) => state.workouts);
@@ -278,6 +298,7 @@ export const useWorkoutActions = () => {
   const addExercise = useStore((state) => state.addExercise);
   const deleteExercise = useStore((state) => state.deleteExercise);
   const updateExercise = useStore((state) => state.updateExercise);
+  const duplicateWorkout = useStore((state) => state.duplicateWorkout);
 
   return {
     loadWorkouts,
@@ -287,6 +308,7 @@ export const useWorkoutActions = () => {
     addExercise,
     deleteExercise,
     updateExercise,
+    duplicateWorkout,
   };
 };
 

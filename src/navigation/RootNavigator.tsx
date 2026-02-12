@@ -15,7 +15,8 @@ import { RegisterScreen } from "@/features/auth/screens/RegisterScreen";
 import { ProfileScreen } from "@/features/auth/screens/ProfileScreen";
 import { WeeklyPlanScreen } from "@/features/workouts/screens/WeeklyPlanScreen";
 import { SessionDetailScreen } from "@/features/sessions/screens/SessionDetailScreen";
-import { THEME } from "@/theme/theme";
+import { THEME as STATIC_THEME, DARK_THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { useSessionActions } from "@/features/sessions/session.store";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { View, ActivityIndicator, StatusBar } from "react-native";
@@ -30,6 +31,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -52,21 +55,20 @@ const TabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: THEME.colors.primary,
-        tabBarInactiveTintColor: THEME.colors.textMuted,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: {
-          backgroundColor: THEME.colors.background,
-          borderTopColor: THEME.colors.border,
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        headerStyle: { backgroundColor: THEME.colors.background },
-        headerTintColor: THEME.colors.text,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.text,
         headerTitleStyle: {
-          fontSize: THEME.typography.h3.fontSize,
-          fontWeight: THEME.typography.h3.fontWeight,
-          fontFamily: THEME.typography.h3.fontFamily,
+          fontSize: theme.typography.h3.fontSize,
+          fontWeight: theme.typography.h3.fontWeight,
         },
       })}
     >
@@ -93,6 +95,7 @@ const TabNavigator = () => {
 };
 
 export const RootNavigator = () => {
+  const { theme } = useTheme();
   const { hydrateSession } = useSessionActions();
   const {
     initialize,
@@ -123,25 +126,44 @@ export const RootNavigator = () => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: THEME.colors.background,
+          backgroundColor: theme.colors.background,
         }}
       >
-        <ActivityIndicator size="large" color={THEME.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar barStyle="light-content" />
+    <NavigationContainer
+      theme={{
+        dark: theme === DARK_THEME,
+        colors: {
+          primary: theme.colors.primary,
+          background: theme.colors.background,
+          card: theme.colors.surface,
+          text: theme.colors.text,
+          border: theme.colors.border,
+          notification: theme.colors.action,
+        },
+        fonts: {
+          regular: { fontFamily: "System", fontWeight: "400" },
+          medium: { fontFamily: "System", fontWeight: "500" },
+          bold: { fontFamily: "System", fontWeight: "700" },
+          heavy: { fontFamily: "System", fontWeight: "800" },
+        },
+      }}
+    >
+      <StatusBar
+        barStyle={theme === DARK_THEME ? "light-content" : "dark-content"}
+      />
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: THEME.colors.background },
-          headerTintColor: THEME.colors.text,
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
           headerTitleStyle: {
-            fontSize: THEME.typography.h3.fontSize,
-            fontWeight: THEME.typography.h3.fontWeight,
-            fontFamily: THEME.typography.h3.fontFamily,
+            fontSize: theme.typography.h3.fontSize,
+            fontWeight: theme.typography.h3.fontWeight,
           },
         }}
       >

@@ -15,6 +15,14 @@ export const PALETTE = {
     text: "#f4f4f5",
     textMuted: "#a1a1aa",
   },
+  light: {
+    background: "#ffffff",
+    surface: "#f9fafb",
+    surfaceSubtle: "#f3f4f6",
+    border: "#e5e7eb",
+    text: "#0f172a",
+    textMuted: "#64748b",
+  },
 } as const;
 
 import { TextStyle } from "react-native";
@@ -65,13 +73,37 @@ const BASE_THEME = {
   },
 };
 
-export const THEME = {
+export const DARK_THEME = {
   ...BASE_THEME,
   colors: {
-    ...PALETTE.dark,
-    primary: PALETTE.emerald400,
-    secondary: PALETTE.violet500,
-    destructive: PALETTE.rose500,
-    action: PALETTE.blue500,
+    background: PALETTE.dark.background as string,
+    surface: PALETTE.dark.surface as string,
+    surfaceSubtle: PALETTE.dark.surfaceSubtle as string,
+    border: PALETTE.dark.border as string,
+    text: PALETTE.dark.text as string,
+    textMuted: PALETTE.dark.textMuted as string,
+    primary: PALETTE.emerald400 as string,
+    secondary: PALETTE.violet500 as string,
+    destructive: PALETTE.rose500 as string,
+    action: PALETTE.blue500 as string,
   },
 };
+
+export const LIGHT_THEME = {
+  ...BASE_THEME,
+  colors: {
+    background: PALETTE.light.background as string,
+    surface: PALETTE.light.surface as string,
+    surfaceSubtle: PALETTE.light.surfaceSubtle as string,
+    border: PALETTE.light.border as string,
+    text: PALETTE.light.text as string,
+    textMuted: PALETTE.light.textMuted as string,
+    primary: PALETTE.emerald500 as string,
+    secondary: PALETTE.violet500 as string,
+    destructive: PALETTE.rose500 as string,
+    action: PALETTE.blue500 as string,
+  },
+};
+
+export type Theme = typeof DARK_THEME;
+export let THEME = DARK_THEME;

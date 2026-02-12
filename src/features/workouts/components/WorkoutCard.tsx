@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { View, Text, StyleSheet, Pressable, Image } from "react-native";
 import { Workout } from "../workout.schema";
 import { THEME } from "@/theme/theme";
+import { useTheme } from "@/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 
 interface WorkoutCardProps {
@@ -10,9 +11,18 @@ interface WorkoutCardProps {
 }
 
 export const WorkoutCard = memo(({ workout, onPress }: WorkoutCardProps) => {
+  const { theme } = useTheme();
+
   return (
     <Pressable
-      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.container,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+        pressed && styles.pressed,
+      ]}
       onPress={() => onPress(workout.id)}
     >
       {workout.image_uri && (
@@ -28,22 +38,43 @@ export const WorkoutCard = memo(({ workout, onPress }: WorkoutCardProps) => {
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.muscleGroup}>{workout.muscle_group}</Text>
-          <View style={styles.intensityTag}>
-            <Ionicons name="flash" size={12} color={THEME.colors.primary} />
-            <Text style={styles.intensityText}>Active</Text>
+          <Text style={[styles.muscleGroup, { color: theme.colors.primary }]}>
+            {workout.muscle_group}
+          </Text>
+          <View
+            style={[
+              styles.intensityTag,
+              { backgroundColor: theme.colors.primary + "15" },
+            ]}
+          >
+            <Ionicons name="flash" size={12} color={theme.colors.primary} />
+            <Text
+              style={[styles.intensityText, { color: theme.colors.primary }]}
+            >
+              Active
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.title}>{workout.name}</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          {workout.name}
+        </Text>
 
         {!!workout.description && (
-          <Text style={styles.description} numberOfLines={2}>
+          <Text
+            style={[styles.description, { color: theme.colors.textMuted }]}
+            numberOfLines={2}
+          >
             {workout.description}
           </Text>
         )}
 
-        <View style={styles.footer}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: theme.colors.border + "50" },
+          ]}
+        >
           <View style={styles.daysRow}>
             {[
               { l: "S", v: 64 },
@@ -60,11 +91,22 @@ export const WorkoutCard = memo(({ workout, onPress }: WorkoutCardProps) => {
                   key={i}
                   style={[
                     styles.dayIndicator,
-                    isActive && styles.dayIndicatorActive,
+                    {
+                      backgroundColor: theme.colors.surfaceSubtle,
+                      borderColor: theme.colors.border,
+                    },
+                    isActive && {
+                      backgroundColor: theme.colors.primary,
+                      borderColor: theme.colors.primary,
+                    },
                   ]}
                 >
                   <Text
-                    style={[styles.dayText, isActive && styles.dayTextActive]}
+                    style={[
+                      styles.dayText,
+                      { color: theme.colors.textMuted },
+                      isActive && { color: theme.colors.background },
+                    ]}
                   >
                     {day.l}
                   </Text>
@@ -73,11 +115,16 @@ export const WorkoutCard = memo(({ workout, onPress }: WorkoutCardProps) => {
             })}
           </View>
 
-          <View style={styles.chevron}>
+          <View
+            style={[
+              styles.chevron,
+              { backgroundColor: theme.colors.surfaceSubtle },
+            ]}
+          >
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={THEME.colors.primary}
+              color={theme.colors.primary}
             />
           </View>
         </View>
