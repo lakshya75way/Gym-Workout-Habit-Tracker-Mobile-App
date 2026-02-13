@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: THEME.spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   emptyState: {
     flex: 1,

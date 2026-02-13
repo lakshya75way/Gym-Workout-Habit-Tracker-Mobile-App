@@ -87,4 +87,15 @@ export const MIGRATIONS = [
   ALTER TABLE logs ADD COLUMN synced_at TEXT;
   ALTER TABLE progress_photos ADD COLUMN synced_at TEXT;
   `,
+  `
+  CREATE TABLE IF NOT EXISTS weight_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT NOT NULL,
+    weight REAL NOT NULL,
+    date TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    synced_at TEXT
+  );
+  `,
 ];

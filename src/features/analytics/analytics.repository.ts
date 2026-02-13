@@ -243,4 +243,47 @@ export class AnalyticsRepository {
       consistencyScore,
     };
   }
+
+  static async getMuscleDistribution(
+    userId: string,
+  ): Promise<ChartDataPoint[]> {
+    const db = await getDb();
+    const result = await db.getAllAsync<{
+      muscle_group: string;
+      count: number;
+    }>(
+      `
+      SELECT w.muscle_group, COUNT(s.id) as count
+      FROM sessions s
+      JOIN workouts w ON s.workout_id = w.id
+      WHERE s.user_id = ? AND s.status = 'completed'
+      GROUP BY w.muscle_group
+      `,
+      [userId],
+    );
+
+    return result.map((r) => ({
+      label: r.muscle_group,
+      value: r.count,
+    }));
+  }
+
+  static async getWorkoutFrequency(
+    userId: string,
+  ): Promise<{ date: string; count: number }[]> {
+    const db = await getDb();
+    const result = await db.getAllAsync<{ date: string; count: number }>(
+      `
+      SELECT date(start_time) as date, COUNT(*) as count
+      FROM sessions
+      WHERE user_id = ? AND status = 'completed'
+      AND start_time >= date('now', '-365 days')
+      GROUP BY date
+      ORDER BY date ASC
+      `,
+      [userId],
+    );
+
+    return result;
+  }
 }

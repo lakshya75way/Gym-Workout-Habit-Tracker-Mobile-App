@@ -21,10 +21,13 @@ import { useWorkoutById } from "@/features/workouts/workout.store";
 import { useTheme } from "@/theme/ThemeContext";
 import { ExerciseLogItem } from "../components/ExerciseLogItem";
 import { Ionicons } from "@expo/vector-icons";
+import { Logger } from "@/services/logger";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { ProgressRepository } from "@/features/progress/progress.repository";
+import { WeightRepository } from "@/features/progress/weight.repository";
 import { PlateCalculatorModal } from "../components/PlateCalculatorModal";
+import { WeightLogModal } from "@/components/WeightLogModal";
 
 const { width } = Dimensions.get("window");
 
@@ -38,6 +41,7 @@ export const SessionScreen = memo(() => {
 
   const [isFinishing, setIsFinishing] = React.useState(false);
   const [isCalculatorVisible, setIsCalculatorVisible] = React.useState(false);
+  const [isWeightModalVisible, setIsWeightModalVisible] = React.useState(false);
   const workout = useWorkoutById(session?.workout_id ?? "");
 
   const { formattedTime } = useTimer(
@@ -77,62 +81,59 @@ export const SessionScreen = memo(() => {
     }
   }, [endSession, navigation]);
 
-  const handlePhotoCapture = useCallback(
-    async (useCamera: boolean) => {
-      try {
-        const permission = useCamera
-          ? await ImagePicker.requestCameraPermissionsAsync()
-          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const handlePhotoCapture = useCallback(async (useCamera: boolean) => {
+    try {
+      const permission = useCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        if (!permission.granted) {
-          Alert.alert(
-            "Permission Required",
-            `${useCamera ? "Camera" : "Gallery"} access is needed to save your progress.`,
-          );
-          return;
-        }
+      if (!permission.granted) {
+        Alert.alert(
+          "Permission Required",
+          `${useCamera ? "Camera" : "Gallery"} access is needed to save your progress.`,
+        );
+        return;
+      }
 
-        const result = useCamera
-          ? await ImagePicker.launchCameraAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              quality: 0.8,
-            })
-          : await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              quality: 0.8,
-            });
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.8,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.8,
+          });
 
-        if (
-          !result.canceled &&
-          result.assets &&
-          result.assets.length > 0 &&
-          session
-        ) {
-          const user = useAuthStore.getState().user;
-          if (user) {
-            try {
-              setIsFinishing(true); // Show loading while saving
-              await ProgressRepository.saveProgressPhoto(
-                user.id,
-                result.assets[0].uri,
-                new Date(),
-                session.id,
-                session.workout_id,
-              );
-            } catch (e) {
-              Alert.alert("Error", "Failed to save photo");
-            }
+      if (
+        !result.canceled &&
+        result.assets &&
+        result.assets.length > 0 &&
+        session
+      ) {
+        const user = useAuthStore.getState().user;
+        if (user) {
+          try {
+            setIsFinishing(true); // Show loading while saving
+            await ProgressRepository.saveProgressPhoto(
+              user.id,
+              result.assets[0].uri,
+              new Date(),
+              session.id,
+              session.workout_id,
+            );
+          } catch (e) {
+            Alert.alert("Error", "Failed to save photo");
           }
         }
-        // Always finish session after photo attempt (successful or canceled)
-        await finishSession();
-      } catch (e) {
-        // If something blows up in picker, still try to finish
-        await finishSession();
       }
-    },
-    [session, finishSession],
-  );
+      // Always move to weight prompt after photo attempt
+      setIsWeightModalVisible(true);
+    } catch (e) {
+      // If something blows up in picker, still show weight prompt
+      setIsWeightModalVisible(true);
+    }
+  }, []);
 
   const handleFinish = useCallback(async () => {
     // 1. Auto-log remaining sets immediately
@@ -148,7 +149,7 @@ export const SessionScreen = memo(() => {
         {
           text: "Skip",
           style: "cancel",
-          onPress: finishSession,
+          onPress: () => setIsWeightModalVisible(true),
         },
         {
           text: "Gallery",
@@ -323,6 +324,21 @@ export const SessionScreen = memo(() => {
       <PlateCalculatorModal
         isVisible={isCalculatorVisible}
         onClose={() => setIsCalculatorVisible(false)}
+      />
+
+      <WeightLogModal
+        isVisible={isWeightModalVisible}
+        onClose={finishSession}
+        onSave={async (weightVal) => {
+          const user = useAuthStore.getState().user;
+          if (user) {
+            try {
+              await WeightRepository.saveWeight(user.id, weightVal, new Date());
+            } catch (e) {
+              Logger.error("Post-workout weight log failed", e);
+            }
+          }
+        }}
       />
     </SafeAreaView>
   );

@@ -9,7 +9,12 @@ import {
   StatusBar,
   TouchableOpacity,
 } from "react-native";
-import { LineChart, BarChart } from "react-native-chart-kit";
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ContributionGraph,
+} from "react-native-chart-kit";
 import { THEME, Theme } from "@/theme/theme";
 import { useTheme } from "@/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,6 +42,10 @@ export const AnalyticsScreen = () => {
     null,
   );
   const [historyData, setHistoryData] = React.useState<ChartDataPoint[]>([]);
+  const [muscleData, setMuscleData] = React.useState<ChartDataPoint[]>([]);
+  const [frequencyData, setFrequencyData] = React.useState<
+    { date: string; count: number }[]
+  >([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -56,18 +65,23 @@ export const AnalyticsScreen = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const [vData, wData, sData, prData, exList] = await Promise.all([
-        AnalyticsRepository.getVolumeHistory(user.id),
-        AnalyticsRepository.getWorkoutsLast7Days(user.id),
-        AnalyticsRepository.getDashboardStats(user.id),
-        AnalyticsRepository.getPersonalRecords(user.id),
-        AnalyticsRepository.getUserExerciseNames(user.id),
-      ]);
+      const [vData, wData, sData, prData, exList, mData, fData] =
+        await Promise.all([
+          AnalyticsRepository.getVolumeHistory(user.id),
+          AnalyticsRepository.getWorkoutsLast7Days(user.id),
+          AnalyticsRepository.getDashboardStats(user.id),
+          AnalyticsRepository.getPersonalRecords(user.id),
+          AnalyticsRepository.getUserExerciseNames(user.id),
+          AnalyticsRepository.getMuscleDistribution(user.id),
+          AnalyticsRepository.getWorkoutFrequency(user.id),
+        ]);
       setVolumeData(vData);
       setWorkoutData(wData);
       setStats(sData);
       setPrs(prData);
       setExercises(exList);
+      setMuscleData(mData);
+      setFrequencyData(fData);
 
       if (exList.length > 0 && !selectedExercise) {
         setSelectedExercise(exList[0]);
@@ -161,6 +175,7 @@ export const AnalyticsScreen = () => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={{ paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}
     >
       <StatusBar
@@ -399,9 +414,11 @@ export const AnalyticsScreen = () => {
             <Ionicons
               name="trending-up"
               size={18}
-              color={THEME.colors.primary}
+              color={theme.colors.primary}
             />
-            <Text style={styles.chartTitle}>Strength Analytics</Text>
+            <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+              Strength Analytics
+            </Text>
           </View>
 
           <ScrollView
@@ -465,9 +482,14 @@ export const AnalyticsScreen = () => {
                 <Ionicons
                   name="analytics-outline"
                   size={40}
-                  color={THEME.colors.surfaceSubtle}
+                  color={theme.colors.surfaceSubtle}
                 />
-                <Text style={styles.emptyChartText}>
+                <Text
+                  style={[
+                    styles.emptyChartText,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
                   No trend data available for this exercise yet.
                 </Text>
               </View>
@@ -538,7 +560,95 @@ export const AnalyticsScreen = () => {
         </View>
       </View>
 
-      <View style={{ height: 40 }} />
+      <View style={styles.chartSection}>
+        <View style={styles.chartHeader}>
+          <Ionicons name="pie-chart" size={18} color={theme.colors.secondary} />
+          <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+            Muscle Distribution
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.chartWrapper,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          {muscleData.length > 0 ? (
+            <PieChart
+              data={muscleData.map((d, i) => ({
+                name: d.label,
+                population: d.value,
+                color: [
+                  theme.colors.primary,
+                  theme.colors.secondary,
+                  theme.colors.action,
+                  theme.colors.destructive,
+                  "#f59e0b",
+                  "#06b6d4",
+                  "#8b5cf6",
+                ][i % 7],
+                legendFontColor: theme.colors.text,
+                legendFontSize: 10,
+              }))}
+              width={screenWidth - THEME.spacing.lg * 2}
+              height={200}
+              chartConfig={chartConfig}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="0"
+              absolute
+            />
+          ) : (
+            <View style={styles.emptyChart}>
+              <Text style={{ color: theme.colors.textMuted }}>No data yet</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.chartSection}>
+        <View style={styles.chartHeader}>
+          <Ionicons
+            name="apps-outline"
+            size={18}
+            color={theme.colors.primary}
+          />
+          <Text style={[styles.chartTitle, { color: theme.colors.text }]}>
+            Intensity Heatmap
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.chartWrapper,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              paddingVertical: 20,
+            },
+          ]}
+        >
+          <ContributionGraph
+            values={frequencyData}
+            endDate={new Date()}
+            numDays={105}
+            width={screenWidth - THEME.spacing.lg * 2 - 20}
+            height={220}
+            chartConfig={{
+              ...chartConfig,
+              backgroundGradientFrom: theme.colors.surface,
+              backgroundGradientTo: theme.colors.surface,
+              color: (opacity = 1) =>
+                themeType === "dark"
+                  ? `rgba(52, 211, 153, ${opacity})`
+                  : `rgba(16, 185, 129, ${opacity})`,
+            }}
+            tooltipDataAttrs={() => ({})}
+          />
+        </View>
+      </View>
     </ScrollView>
   );
 };

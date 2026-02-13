@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: "auto",
     alignItems: "center",
-    paddingBottom: THEME.spacing.xl,
+    paddingBottom: 100,
   },
   versionText: {
     ...THEME.typography.caption,

@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: THEME.spacing.lg,
     paddingTop: THEME.spacing.md,
+    paddingBottom: 100,
   },
   welcomeContainer: {
     marginBottom: THEME.spacing.xl,
